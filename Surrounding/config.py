@@ -9,3 +9,6 @@ batch_size = 128
 n_epoch = 5
 epsilon = 0.9
 score = 0
+
+grid_size = 32
+observation_length = 20
