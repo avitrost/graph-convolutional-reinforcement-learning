@@ -3,6 +3,8 @@ from numpy import sqrt, square
 from time import sleep
 
 VIEW_RADIUS = 5
+TEAM_COLORS = ['red', 'blue']
+CLASSES = ['ranged', 'melee']
 
 class model:
     def __init__(self):
@@ -44,10 +46,10 @@ def train(env):
         agent_positions = get_agent_positions(env)
         focus_agent = env.agents[0]
         agents_in_radius = get_agents_in_radius(focus_agent, agent_positions)
-
+        
         print("agents in view radius of %s:" % (focus_agent))
         print(agents_in_radius)
-
+        sleep(1000)
         actions = {}
         for agent in env.agents:
             obversvations_vector = mask(observations, agent)
@@ -59,6 +61,21 @@ def main():
     env = combined_arms_v5.parallel_env(map_size=45, minimap_mode=False, 
     step_reward=-0.005, dead_penalty=-0.1, attack_penalty=-0.1, 
     attack_opponent_reward=0.2, max_cycles=1000, extra_features=False)
+
+    team_size = env.num_agents / 2
+    agent_names = env.possible_agents
+    print(team_size)
+    print(agent_names)
+
+    team1_agents = []
+    team2_agents = []
+    for i in range(len(agent_names))
+        if agent_names.contains[TEAM_COLORS[0]]:
+        else:
+
+
+    raise Exception('a')
+
     train(env)
 
 
