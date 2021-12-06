@@ -85,6 +85,24 @@ def sort_agents(agent_names):
             raise Exception('agent found with unknown team')
     return (team1_agents, team2_agents)
 
+def get_agent_id_maps(agent_names):
+    names_to_ids = {}
+    ids_to_names = {}
+    for i, name in enumerate(agent_names):
+        names_to_ids[name] = i
+        ids_to_names[i] = name
+    return names_to_ids, ids_to_names
+
+def build_adjacency_matrix(names_to_ids, positions):
+    agent_names = names_to_ids.keys()
+    matrix = np.zeros((len(agent_names), len(agent_names)))
+    for agent in agent_names:
+        agent_id = names_to_ids[agent]
+        neighbors = get_agents_in_radius(agent, positions)
+        for neighbor in neighbors:
+            matrix[agent_id][names_to_ids[neighbor]] = 1
+    return matrix
+
 def main():
     # create our parallel environment so we get all observations at once
     env = combined_arms_v5.parallel_env(map_size=45, minimap_mode=False, 
