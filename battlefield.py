@@ -4,7 +4,7 @@ from time import sleep
 
 VIEW_RADIUS = 5
 TEAM_COLORS = ['red', 'blue']
-CLASSES = ['ranged', 'melee']
+CLASSES = ['ranged', 'mele']
 
 class model:
     def __init__(self):
@@ -55,6 +55,35 @@ def train(env):
             obversvations_vector = mask(observations, agent)
             action = Model.call()
             
+def sort_agents(agent_names):
+    team1_agents = {
+        CLASSES[0]: [],
+        CLASSES[1]: []
+    }
+    team2_agents = {
+        CLASSES[0]: [],
+        CLASSES[1]: []
+    }
+    for i in range(len(agent_names)):
+        if TEAM_COLORS[0] in agent_names[i]:
+            if CLASSES[0] in agent_names[i]:
+                team1_agents[CLASSES[0]].append(agent_names[i])
+            elif CLASSES[1] in agent_names[i]:
+                team1_agents[CLASSES[1]].append(agent_names[i])
+            else:
+                print(agent_names[i])
+                raise Exception('agent found with unknown class')
+        elif TEAM_COLORS[1] in agent_names[i]:
+            if CLASSES[0] in agent_names[i]:
+                team2_agents[CLASSES[0]].append(agent_names[i])
+            elif CLASSES[1] in agent_names[i]:
+                team2_agents[CLASSES[1]].append(agent_names[i])
+            else:
+                print(agent_names[i])
+                raise Exception('agent found with unknown class')
+        else:
+            raise Exception('agent found with unknown team')
+    return (team1_agents, team2_agents)
 
 def main():
     # create our parallel environment so we get all observations at once
@@ -67,12 +96,9 @@ def main():
     print(team_size)
     print(agent_names)
 
-    team1_agents = []
-    team2_agents = []
-    for i in range(len(agent_names))
-        if agent_names.contains[TEAM_COLORS[0]]:
-        else:
-
+    team1_agents, team2_agents = sort_agents(agent_names)
+    print(team1_agents)
+    print(team2_agents)
 
     raise Exception('a')
 
