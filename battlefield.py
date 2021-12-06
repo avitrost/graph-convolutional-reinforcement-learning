@@ -11,6 +11,8 @@ CLASSES = ['ranged', 'mele']
 CLASS1_ACTIONS = 9
 CLASS2_ACTIONS = 13
 OBSERVATION_SPACE_SIZE = 1521
+MAX_EPISODES = 1000
+MAX_STEPS = 500
 
 class model:
     def __init__(self):
@@ -70,81 +72,90 @@ def build_reward_matrices(id_maps, rewards, agents, team_size):
 #TODO split up the dicts of id/name by team
 #TODO define sizes of action spaces for ranged vs melee
 def train(env, id_maps, team_size, team1_class1_model, team1_class2_model, team2_class1_model, team2_class2_model):
-    max_episodes = 1000
+    
     epsilon = 0.9
 
-    #TODO size of replay buffer
-    #TODO different replay buffers for each team
-    replay_buffer_1 = ReplayBuffer() 
-    replay_buffer_2 = ReplayBuffer() 
-    observations = env.reset()
     
-    input_matrix_1, input_matrix_2 = build_observation_matrices(id_maps, observations, env.agents, team_size)
     
-    positions = get_agent_positions(env)
-    adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
-    adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
-
-    for step in range(max_episodes):
+    for episode in range(MAX_EPISODES):
         env.render()
         
-        if step > 100:
+        if episode > 100:
             epsilon -= 0.0004
             if epsilon < 0.1:
                 epsilon = 0.1
 
-        q_1_1 = team1_class1_model(input_matrix_1, adj_matrix_1)
-        q_1_2 = team1_class2_model(input_matrix_1, adj_matrix_1)
-        q_2_1 = team2_class1_model(input_matrix_2, adj_matrix_2)
-        q_2_2 = team2_class2_model(input_matrix_2, adj_matrix_2)
-
-        actions = {}
-
-        action_matrix_1 = np.zeros([team_size])
-        action_matrix_2 = np.zeros([team_size])
-
-        for agent in env.agents:
-            if CLASSES[0] in agent and TEAM_COLORS[0] in agent:
-                if np.random.rand() < epsilon:
-                    action = np.random.randint(CLASS1_ACTIONS)
-                else:
-                    action = tf.math.argmax(q_1_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
-                action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
-            elif CLASSES[0] in agent and TEAM_COLORS[1] in agent:
-                if np.random.rand() < epsilon:
-                    action = np.random.randint(CLASS1_ACTIONS)
-                else:
-                    action = tf.math.argmax(q_2_1[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
-                action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
-            elif CLASSES[1] in agent and TEAM_COLORS[0] in agent:
-                if np.random.rand() < epsilon:
-                    action = np.random.randint(CLASS1_ACTIONS)
-                else:
-                    action = tf.math.argmax(q_1_2[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
-                action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
-            elif CLASSES[1] in agent and TEAM_COLORS[1] in agent:
-                if np.random.rand() < epsilon:
-                    action = np.random.randint(CLASS1_ACTIONS)
-                else:
-                    action = tf.math.argmax(q_2_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
-                action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
-
-            actions[agent] = action
-
-
-        next_observations, rewards, dones, infos = env.step(actions)
-
+        #TODO size of replay buffer
+        #TODO different replay buffers for each team
+        replay_buffer_1 = ReplayBuffer() 
+        replay_buffer_2 = ReplayBuffer() 
+        observations = env.reset()
+        
+        input_matrix_1, input_matrix_2 = build_observation_matrices(id_maps, observations, env.agents, team_size)
+        
         positions = get_agent_positions(env)
-        next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
-        next_adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
+        adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
+        adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
         
-        next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
+        for step in range(MAX_STEPS):
+            q_1_1 = team1_class1_model(input_matrix_1, adj_matrix_1)
+            q_1_2 = team1_class2_model(input_matrix_1, adj_matrix_1)
+            q_2_1 = team2_class1_model(input_matrix_2, adj_matrix_2)
+            q_2_2 = team2_class2_model(input_matrix_2, adj_matrix_2)
 
-        reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
+            actions = {}
 
-        replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, infos)
-        replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, infos)
-        
+            action_matrix_1 = np.zeros([team_size])
+            action_matrix_2 = np.zeros([team_size])
+
+            for agent in env.agents:
+                if CLASSES[0] in agent and TEAM_COLORS[0] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS1_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_1_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
+                    action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
+                elif CLASSES[0] in agent and TEAM_COLORS[1] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS1_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_2_1[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
+                    action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
+                elif CLASSES[1] in agent and TEAM_COLORS[0] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS1_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_1_2[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
+                    action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
+                elif CLASSES[1] in agent and TEAM_COLORS[1] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS1_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_2_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
+                    action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
+
+                actions[agent] = action
+
+
+            next_observations, rewards, dones, infos = env.step(actions)
+
+            positions = get_agent_positions(env)
+            next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
+            next_adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
+            
+            next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
+
+            reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
+
+            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, infos)
+            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, infos)
+
+            input_matrix_1 = next_input_matrix_1
+            input_matrix_2 = next_input_matrix_2
+            adj_matrix_1 = next_adj_matrix_1
+            adj_matrix_2 = next_adj_matrix_2
+            observations = next_observations
+            
     #TODO backprop model
 def sort_agents(agent_names):
     team1_agents = {
