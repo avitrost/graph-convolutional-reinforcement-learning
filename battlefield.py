@@ -2,6 +2,7 @@ from pettingzoo.magent import combined_arms_v5
 from numpy import sqrt, square
 import numpy as np
 from time import sleep
+from buffer import ReplayBuffer
 
 VIEW_RADIUS = 5
 TEAM_COLORS = ['red', 'blue']
@@ -38,42 +39,74 @@ def get_agents_in_radius(agent, positions):
                 agents.append(a)
     return agents
 
+#TODO split up the dicts of id/name by team
+#TODO define sizes of action spaces for ranged vs melee
 def train(env, names_to_ids, ids_to_names, team_size, team1_class1_model, team1_class2_model, team2_class1_model, team2_class2_model):
-    max_cycles = 1000
-    observations = env.reset()
-    for step in range(max_cycles):
-        env.render()
+    max_episodes = 1000
+    epsilon = 0.9
 
-        # agent_positions = get_agent_positions(env)
-        # focus_agent = env.agents[0]
-        # agents_in_radius = get_agents_in_radius(focus_agent, agent_positions)
+    #TODO size of replay buffer
+    #TODO different replay buffers for each team
+    replay_buffer = ReplayBuffer() 
+    observations = env.reset()
+
+    positions = get_agent_positions(env)
+    adj_matrix_1 = build_adjacency_matrix(names_to_ids, positions)
+    adj_matrix_2 = build_adjacency_matrix(names_to_ids, positions)
+
+    for step in range(max_episodes):
+        env.render()
         
-        # sleep(1000)
-        
+        if step > 100:
+            epsilon -= 0.0004
+            if epsilon < 0.1:
+                epsilon = 0.1
+
         input_matrix_1 = np.zeros([team_size, 1521])
         input_matrix_2 = np.zeros([team_size, 1521])
         
+        #TODO append class of agent to end of observation space
         for agent in env.agents:
             if TEAM_COLORS[0] in agent:
                 input_matrix_1[names_to_ids[agent] % team_size] = np.reshape(observations[agent], [-1])
             elif TEAM_COLORS[1] in agent:
                 input_matrix_2[names_to_ids[agent] % team_size] = np.reshape(observations[agent], [-1])
+        
+
+        q_1_1 = team1_class1_model(input_matrix_1, adj_matrix_1)
+        q_1_2 = team1_class2_model(input_matrix_1, adj_matrix_1)
+        q_2_1 = team2_class1_model(input_matrix_2, adj_matrix_2)
+        q_2_2 = team2_class2_model(input_matrix_2, adj_matrix_2)
+
         actions = {}
 
         for agent in env.agents:
-            if TEAM_COLORS[0] in agent:
-                if CLASSES[0] in agent:
-                    action = team1_class1_model(input_matrix_1)
-                elif CLASSES[1] in agent:
-                    action = team1_class2_model(input_matrix_1)
-            elif TEAM_COLORS[1] in agent:
-                if CLASSES[0] in agent:
-                    action = team2_class1_model(input_matrix_2)
-                elif CLASSES[1] in agent:
-                    action = team2_class2_model(input_matrix_2)
-            obversvations_vector = mask(observations, agent)
-            action = Model.call()
-            
+            if CLASSES[0] in agent:
+                if np.random.rand() < epsilon:
+                    action = np.random.randint(n_actions_1)
+                else:
+                    if TEAM_COLORS[0] in agent:
+                        action = tf.math.argmax(q_1_1[names_to_ids[agent]])
+                    elif TEAM_COLORS[1] in agent:
+                        action = tf.math.argmax(q_2_1[names_to_ids[agent]])
+            elif CLASSES[1] in agent:
+                if np.random.rand() < epsilon:
+                    action = np.random.randint(n_actions_2)
+                else:
+                    if TEAM_COLORS[0] in agent:
+                        action = tf.math.argmax(q_1_2[names_to_ids[agent]])
+                    elif TEAM_COLORS[1] in agent:
+                        action = tf.math.argmax(q_2_2[names_to_ids[agent]])
+            actions[agent] = action
+
+
+        next_observations, rewards, dones, infos = env.step(actions)
+        positions = get_agent_positions(env)
+        next_adj_matrix_1 = build_adjacency_matrix(names_to_ids, positions)
+        next_adj_matrix_2 = build_adjacency_matrix(names_to_ids, positions)
+        
+        replay_buffer.add(observations, actions, rewards, next_observations, adj_matrix_1, next_adj_matrix_1, infos)
+        
 def sort_agents(agent_names):
     team1_agents = {
         CLASSES[0]: [],
