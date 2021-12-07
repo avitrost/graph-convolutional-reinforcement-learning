@@ -72,21 +72,21 @@ def build_reward_matrices(id_maps, rewards, agents, team_size):
 
 #TODO split up the dicts of id/name by team
 #TODO define sizes of action spaces for ranged vs melee
-def train(env, id_maps, team_size, team1_class1_model, team1_class2_model, team2_class1_model, team2_class2_model):
+def train(env, id_maps, team_size, team1_model, team2_model):
     
     epsilon = 0.9
     GAMMA = 0.99
     n_epoch = 5
     batch_size = 128
 
-    O_1 = np.ones((batch_size, n_agents, observation_space))
-    O_2 = np.ones((batch_size, n_agents, observation_space))
-    Next_O_1 = np.ones((batch_size, n_agents, observation_space))
-    Next_O_2 = np.ones((batch_size, n_agents, observation_space))
-    Matrix_1 = np.ones((batch_size, n_agents, n_agents))
-    Matrix_2 = np.ones((batch_size, n_agents, n_agents))
-    Next_Matrix_1 = np.ones((batch_size, n_agents, n_agents))
-    Next_Matrix_2 = np.ones((batch_size, n_agents, n_agents))
+    O_1 = np.ones((batch_size, team_size, 13, 13, 9))
+    O_2 = np.ones((batch_size, team_size, 13, 13, 9))
+    Next_O_1 = np.ones((batch_size, team_size, 13, 13, 9))
+    Next_O_2 = np.ones((batch_size, team_size, 13, 13, 9))
+    Matrix_1 = np.ones((batch_size, team_size, team_size))
+    Matrix_2 = np.ones((batch_size, team_size, team_size))
+    Next_Matrix_1 = np.ones((batch_size, team_size, team_size))
+    Next_Matrix_2 = np.ones((batch_size, team_size, team_size))
 
     score = 0
     
@@ -111,10 +111,8 @@ def train(env, id_maps, team_size, team1_class1_model, team1_class2_model, team2
         adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
         
         for step in range(MAX_STEPS):
-            q_1_1 = team1_class1_model(input_matrix_1, adj_matrix_1)
-            q_1_2 = team1_class2_model(input_matrix_1, adj_matrix_1)
-            q_2_1 = team2_class1_model(input_matrix_2, adj_matrix_2)
-            q_2_2 = team2_class2_model(input_matrix_2, adj_matrix_2)
+            q_1 = team1_model(input_matrix_1, adj_matrix_1)
+            q_2 = team2_model(input_matrix_2, adj_matrix_2)
 
             actions = {}
 
@@ -126,25 +124,25 @@ def train(env, id_maps, team_size, team1_class1_model, team1_class2_model, team2
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS1_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_1_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]][:CLASS1_ACTIONS])
                     action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
                 elif CLASSES[0] in agent and TEAM_COLORS[1] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS1_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_2_1[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]][:CLASS1_ACTIONS])
                     action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
                 elif CLASSES[1] in agent and TEAM_COLORS[0] in agent:
                     if np.random.rand() < epsilon:
-                        action = np.random.randint(CLASS1_ACTIONS)
+                        action = np.random.randint(CLASS2_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_1_2[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
                     action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
                 elif CLASSES[1] in agent and TEAM_COLORS[1] in agent:
                     if np.random.rand() < epsilon:
-                        action = np.random.randint(CLASS1_ACTIONS)
+                        action = np.random.randint(CLASS2_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_2_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
                     action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
 
                 actions[agent] = action
@@ -194,46 +192,30 @@ def train(env, id_maps, team_size, team1_class1_model, team1_class2_model, team2
                 Next_Matrix_2[j] = sample_2[5]
 
             with tf.GradientTape() as tape:
-                q_values_1_1 = team1_class1_model.model(O_1, Matrix_1)
-                q_values_1_2 = team1_class2_model.model(O_1, Matrix_1)
-                q_values_2_1 = team1_class1_model.model(O_2, Matrix_2)
-                q_values_2_2 = team1_class2_model.model(O_2, Matrix_2)
-                expected_q_values_1_1 = tf.identity(q_values_1_1)
-                expected_q_values_1_2 = tf.identity(q_values_1_2)
-                expected_q_values_2_1 = tf.identity(q_values_2_1)
-                expected_q_values_2_2 = tf.identity(q_values_2_2)
-                target_q_values_1_1 = team1_class1_model.target_model(Next_O_1, Next_Matrix_1).max(dim = 2)[0]
-                target_q_values_1_2 = team1_class2_model.target_model(Next_O_1, Next_Matrix_1).max(dim = 2)[0]
-                target_q_values_2_1 = team2_class1_model.target_model(Next_O_2, Next_Matrix_2).max(dim = 2)[0]
-                target_q_values_2_2 = team2_class2_model.target_model(Next_O_2, Next_Matrix_2).max(dim = 2)[0]
+                q_values_1 = team1_model.model(O_1, Matrix_1)
+                q_values_2 = team2_model.model(O_2, Matrix_2)
+                expected_q_values_1 = tf.identity(q_values_1)
+                expected_q_values_2 = tf.identity(q_values_2)
+                target_q_values_1 = team1_model.target_model(Next_O_1, Next_Matrix_1).max(dim = 2)[0]
+                target_q_values_2 = team2_model.target_model(Next_O_2, Next_Matrix_2).max(dim = 2)[0]
                 
                 for j in range(batch_size):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
-                    for i in range(n_agents):
-                        expected_q_values_1_1[j][i][sample_1[1][i]] = sample_1[2][i] + (1-sample_1[6])*GAMMA*target_q_values_1_1[j][i]
-                        expected_q_values_1_2[j][i][sample_1[1][i]] = sample_1[2][i] + (1-sample_1[6])*GAMMA*target_q_values_1_2[j][i]
-                        expected_q_values_2_1[j][i][sample_2[1][i]] = sample_2[2][i] + (1-sample_2[6])*GAMMA*target_q_values_2_1[j][i]
-                        expected_q_values_2_2[j][i][sample_2[1][i]] = sample_2[2][i] + (1-sample_2[6])*GAMMA*target_q_values_2_2[j][i]
+                    for i in range(team_size):
+                        expected_q_values_1[j][i][sample_1[1][i]] = sample_1[2][i] + (1-sample_1[6])*GAMMA*target_q_values_1[j][i]
+                        expected_q_values_2[j][i][sample_2[1][i]] = sample_2[2][i] + (1-sample_2[6])*GAMMA*target_q_values_2[j][i]
                 
-                loss_1_1 = tf.reduce_mean(tf.math.square(q_values_1_1 - expected_q_values_1_1))
-                loss_1_2 = tf.reduce_mean(tf.math.square(q_values_1_2 - expected_q_values_1_2))
-                loss_2_1 = tf.reduce_mean(tf.math.square(q_values_2_1 - expected_q_values_2_1))
-                loss_2_2 = tf.reduce_mean(tf.math.square(q_values_2_2 - expected_q_values_2_2))
-            gradients_1_1 = tape.gradient(loss_1_1, team1_class1_model.model.trainable_variables)
-            gradients_1_2 = tape.gradient(loss_1_2, team1_class2_model.model.trainable_variables)
-            gradients_2_1 = tape.gradient(loss_2_1, team2_class1_model.model.trainable_variables)
-            gradients_2_2 = tape.gradient(loss_2_2, team2_class2_model.model.trainable_variables)
-            team1_class1_model.model.optimizer.apply_gradients(zip(gradients_1_1, team1_class1_model.model.trainable_variables))
-            team1_class2_model.model.optimizer.apply_gradients(zip(gradients_1_2, team1_class2_model.model.trainable_variables))
-            team2_class1_model.model.optimizer.apply_gradients(zip(gradients_2_1, team2_class1_model.model.trainable_variables))
-            team2_class2_model.model.optimizer.apply_gradients(zip(gradients_2_2, team2_class2_model.model.trainable_variables))
+                loss_1 = tf.reduce_mean(tf.math.square(q_values_1 - expected_q_values_1))
+                loss_2 = tf.reduce_mean(tf.math.square(q_values_2 - expected_q_values_2))
+            gradients_1 = tape.gradient(loss_1, team1_model.model.trainable_variables)
+            gradients_2 = tape.gradient(loss_2, team2_model.model.trainable_variables)
+            team1_model.model.optimizer.apply_gradients(zip(gradients_1, team1_model.model.trainable_variables))
+            team2_model.model.optimizer.apply_gradients(zip(gradients_2, team2_model.model.trainable_variables))
 
         if episode % 5 == 0:
-            team1_class1_model.update_target_model()
-            team1_class2_model.update_target_model()
-            team2_class1_model.update_target_model()
-            team2_class2_model.update_target_model()
+            team1_model.update_target_model()
+            team2_model.update_target_model()
             
     #TODO backprop model
 def sort_agents(agent_names):
