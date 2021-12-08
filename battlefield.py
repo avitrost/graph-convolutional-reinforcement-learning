@@ -48,6 +48,9 @@ def get_agents_in_radius(agent, positions):
     agents = []
     for a in positions:
         if not a == agent:
+            if not agent in positions:
+                print(positions)
+                print(agent)
             if distance(positions[agent], positions[a]) <= VIEW_RADIUS:
                 if (TEAM_COLORS[0] in agent and TEAM_COLORS[0] in a) or (TEAM_COLORS[1] in agent and TEAM_COLORS[1] in a):
                     agents.append(a)
