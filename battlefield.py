@@ -62,9 +62,9 @@ def build_observation_matrices(id_maps, observations, agents, team_size):
     #TODO append class of agent to end of observation space
     for agent in agents:
         if TEAM_COLORS[0] in agent:
-            input_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = observations[agent], [-1]
+            input_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = observations[agent]
         elif TEAM_COLORS[1] in agent:
-            input_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = observations[agent], [-1]
+            input_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = observations[agent]
     
     return (input_matrix_1, input_matrix_2)
 
