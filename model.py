@@ -43,17 +43,38 @@ class Q_Net(keras.Model):
 		return q
 
 class DGN(keras.Model):
-	def __init__(self, hidden_dim, num_actions):
-		super(DGN, self).__init__()
-		
-		self.encoder = Encoder(hidden_dim)
-		self.att_1 = AttModel(hidden_dim, hidden_dim)
-		self.att_2 = AttModel(hidden_dim, hidden_dim)
-		self.q_net = Q_Net(num_actions)
-		
-	def call(self, x, mask):
-		h1 = self.encoder(x)
-		h2 = self.att_1(h1, mask)
-		h3 = self.att_2(h2, mask)
-		q = self.q_net(tf.concat([h1, h2, h3], axis=0))
-		return q 
+    def __init__(self, hidden_dim, num_actions, lr = 0.0001):
+        super(DGN, self).__init__()
+        
+        self.encoder = Encoder(hidden_dim)
+        self.att_1 = AttModel(hidden_dim, hidden_dim)
+        self.att_2 = AttModel(hidden_dim, hidden_dim)
+        self.q_net = Q_Net(num_actions)
+        self.optimizer = keras.optimizers.Adam(learning_rate=lr)
+        
+    def call(self, x, mask):
+        h1 = self.encoder(x)
+        h2 = self.att_1(h1, mask)
+        h3 = self.att_2(h2, mask)
+        q = self.q_net(tf.concat([h1, h2, h3], axis=0))
+        return q
+        
+class AgentModel:
+    def __init__(self, hidden_dim, num_actions, lr = 0.0001):
+        self.model = self.build_model(hidden_dim, num_actions, lr)
+        self.target_model = self.build_model(hidden_dim, num_actions, lr)
+        self.update_target_model()
+
+    def build_model(self, hidden_dim, num_actions):
+        model = DGN(hidden_dim, num_actions, lr = 0.0001)
+        return model
+
+    def update_target_model(self):
+        self.target_model.set_weights(self.model.get_weights())
+
+    def load(self, name):
+        self.model.load_weights(name)
+        self.update_target_model()
+
+    def save(self, name):
+        self.target_model.save_weights(name)

@@ -5,6 +5,8 @@ from time import sleep
 from buffer import ReplayBuffer
 import tensorflow as tf
 
+from model import AgentModel
+
 VIEW_RADIUS = 5
 TEAM_COLORS = ['red', 'blue']
 CLASSES = ['ranged', 'mele']
@@ -14,6 +16,9 @@ OBSERVATION_SPACE_SIZE = 1521
 MAX_EPISODES = 1000
 MAX_STEPS = 500
 RENDER = True
+
+HIDDEN_DIM = 128
+
 
 class model:
     def __init__(self):
@@ -208,6 +213,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                 
                 loss_1 = tf.reduce_mean(tf.math.square(q_values_1 - expected_q_values_1))
                 loss_2 = tf.reduce_mean(tf.math.square(q_values_2 - expected_q_values_2))
+                print('total loss: ' + str((loss_1 + loss_2).numpy()))
             gradients_1 = tape.gradient(loss_1, team1_model.model.trainable_variables)
             gradients_2 = tape.gradient(loss_2, team2_model.model.trainable_variables)
             team1_model.model.optimizer.apply_gradients(zip(gradients_1, team1_model.model.trainable_variables))
@@ -299,7 +305,13 @@ def main():
 
     id_maps = get_agent_id_maps(agent_names)
 
-    train(env, id_maps, team_size, None, None, None, None)
+    team1_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
+    team2_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
+
+    train(env, id_maps, team_size, team1_model, team2_model)
+
+    team1_model.save('team1_model')
+    team2_model.save('team2_model')
 
 
 if __name__ == '__main__':
