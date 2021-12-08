@@ -65,8 +65,8 @@ class AgentModel:
         self.target_model = self.build_model(hidden_dim, num_actions, lr)
         self.update_target_model()
 
-    def build_model(self, hidden_dim, num_actions):
-        model = DGN(hidden_dim, num_actions, lr = 0.0001)
+    def build_model(self, hidden_dim, num_actions, lr = 0.0001):
+        model = DGN(hidden_dim, num_actions, lr)
         return model
 
     def update_target_model(self):
