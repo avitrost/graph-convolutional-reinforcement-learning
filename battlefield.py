@@ -47,6 +47,7 @@ def get_agent_positions(env):
 def get_agents_in_radius(agent, positions):
     agents = []
     for a in positions:
+        print(agent, a)
         if not a == agent:
             if distance(positions[agent], positions[a]) <= VIEW_RADIUS:
                 agents.append(a)
