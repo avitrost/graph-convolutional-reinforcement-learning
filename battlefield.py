@@ -120,11 +120,15 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         positions = get_agent_positions(env)
         adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
         adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
+        prev_agents = env.agents
         
         for step in range(MAX_STEPS):
             print('step:', step)
             print('{} agents', len(env.agents))
             sys.stdout.flush()
+            print(list(set(env.agents) - set(prev_agents)))
+            sys.stdout.flush()
+            prev_agents = env.agents
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
 
