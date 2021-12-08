@@ -180,12 +180,18 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             print('h')
 
             input_matrix_1 = next_input_matrix_1
+            print('i')
             input_matrix_2 = next_input_matrix_2
+            print('j')
             adj_matrix_1 = next_adj_matrix_1
+            print('k')
             adj_matrix_2 = next_adj_matrix_2
+            print('l')
             observations = next_observations
+            print('m')
 
             score += np.sum(list(rewards.values())) # total score across both teams, should update later
+            print('n')
         
         if episode % 20 == 0:
             print(score / 2000)
