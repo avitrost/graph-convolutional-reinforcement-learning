@@ -12,7 +12,7 @@ VIEW_RADIUS = 5
 TEAM_COLORS = ['red', 'blue']
 CLASSES = ['mele', 'ranged']
 CLASS1_ACTIONS = 9
-CLASS2_ACTIONS = 13
+CLASS2_ACTIONS = 25
 OBSERVATION_SPACE_SIZE = 1521
 MAX_EPISODES = 1000
 CAPACITY = 1000
@@ -120,12 +120,10 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         positions = get_agent_positions(env)
         adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
         adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
-        prev_agents = env.agents
         
         for step in range(MAX_STEPS):
-            print('step:', step)
+            print('episode/step:', episode, step)
             print('{} agents', len(env.agents))
-            prev_agents = env.agents
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
 
