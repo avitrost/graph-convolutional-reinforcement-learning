@@ -162,6 +162,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
 
             next_observations, rewards, dones, infos = env.step(actions)
+            print(dones)
+            print(infos)
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
@@ -170,8 +172,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
             reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
 
-            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, infos)
-            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, infos)
+            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, dones)
+            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, dones)
 
             input_matrix_1 = next_input_matrix_1
             input_matrix_2 = next_input_matrix_2
