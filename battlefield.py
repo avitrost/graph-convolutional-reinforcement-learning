@@ -290,7 +290,6 @@ def build_adjacency_matrix(names_to_ids, positions):
         agent_id = names_to_ids[agent]
         neighbors = get_agents_in_radius(agent, positions)
         for neighbor in neighbors:
-            print(agent_id, neighbor)
             a = matrix[agent_id]
             b = names_to_ids[neighbor]
             c = a[b]
