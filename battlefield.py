@@ -173,7 +173,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             adj_matrix_2 = next_adj_matrix_2
             observations = next_observations
 
-            score += np.sum(rewards.values()) # total score across both teams, should update later
+            score += np.sum(list(rewards.values())) # total score across both teams, should update later
         
         if episode % 20 == 0:
             print(score / 2000)
