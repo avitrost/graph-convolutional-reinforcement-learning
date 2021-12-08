@@ -126,7 +126,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             print('step:', step)
             print('{} agents', len(env.agents))
             sys.stdout.flush()
-            print(list(set(env.agents) - set(prev_agents)))
+            print(list(set(prev_agents) - set(env.agents)))
             sys.stdout.flush()
             prev_agents = env.agents
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
