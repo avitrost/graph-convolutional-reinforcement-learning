@@ -305,6 +305,7 @@ def main():
     team1_agents, team2_agents = sort_agents(agent_names)
 
     id_maps = get_agent_id_maps(agent_names)
+    print(id_maps)
 
     team1_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
     team2_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
