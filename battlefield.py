@@ -100,6 +100,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
     score = 0
     
     for episode in range(MAX_EPISODES):
+        print('episode:', episode)
         if RENDER:
             env.render()
         
@@ -120,6 +121,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
         
         for step in range(MAX_STEPS):
+            print('step:', step)
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
 
@@ -185,6 +187,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             continue
 
         for e in range(n_epoch):
+            print('epoch:', e)
             
             batch_1 = replay_buffer_1.getBatch(batch_size)
             batch_2 = replay_buffer_2.getBatch(batch_size)
