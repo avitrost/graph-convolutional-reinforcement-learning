@@ -272,8 +272,8 @@ def get_agent_id_maps(agent_names):
 
     for name in agent_names:
         if TEAM_COLORS[0] in name :
-            maps[TEAM_COLORS[1]]["names_to_ids"][name] = team1_counter
-            maps[TEAM_COLORS[1]]["ids_to_names"][team1_counter] = name
+            maps[TEAM_COLORS[0]]["names_to_ids"][name] = team1_counter
+            maps[TEAM_COLORS[0]]["ids_to_names"][team1_counter] = name
             team1_counter = team1_counter + 1
         elif TEAM_COLORS[1] in name:
             maps[TEAM_COLORS[1]]["names_to_ids"][name] = team2_counter
@@ -305,7 +305,6 @@ def main():
     team1_agents, team2_agents = sort_agents(agent_names)
 
     id_maps = get_agent_id_maps(agent_names)
-    print(id_maps)
 
     team1_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
     team2_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
