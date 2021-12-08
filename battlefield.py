@@ -291,7 +291,11 @@ def build_adjacency_matrix(names_to_ids, positions):
         neighbors = get_agents_in_radius(agent, positions)
         for neighbor in neighbors:
             a = matrix[agent_id]
-            b = names_to_ids[neighbor]
+            try:
+                b = names_to_ids[neighbor]
+            except KeyError:
+                print(names_to_ids)
+                print(neighbor)
             c = a[b]
             matrix[agent_id][names_to_ids[neighbor]] = 1
     return matrix
