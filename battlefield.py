@@ -172,6 +172,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             adj_matrix_1 = next_adj_matrix_1
             adj_matrix_2 = next_adj_matrix_2
             observations = next_observations
+            print(rewards)
 
             score += np.sum(rewards)
         

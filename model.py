@@ -27,7 +27,7 @@ class AttModel(keras.Model):
         q = self.fcq(x)
         k = self.fck(x)
         scores = tf.matmul(q, k, transpose_b=True)
-        att = tf.nn.softmax(tf.math.multiply(scores, mask) - np.inf * (1 - mask), axis=None)
+        att = tf.nn.softmax(scores - np.inf * (1 - mask), axis=None)
         
         out = tf.matmul(att, v) / np.sqrt(self.hidden_dim) # Might not be needed
 		# out = torch.add(out,v)
