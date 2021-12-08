@@ -14,8 +14,9 @@ CLASS1_ACTIONS = 9
 CLASS2_ACTIONS = 13
 OBSERVATION_SPACE_SIZE = 1521
 MAX_EPISODES = 1000
+CAPACITY = 1000
 MAX_STEPS = 500
-RENDER = True
+RENDER = False
 
 HIDDEN_DIM = 128
 
@@ -106,8 +107,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
         #TODO size of replay buffer
         #TODO different replay buffers for each team
-        replay_buffer_1 = ReplayBuffer() 
-        replay_buffer_2 = ReplayBuffer() 
+        replay_buffer_1 = ReplayBuffer(CAPACITY) 
+        replay_buffer_2 = ReplayBuffer(CAPACITY) 
         observations = env.reset()
         input_matrix_1, input_matrix_2 = build_observation_matrices(id_maps, observations, env.agents, team_size)
         
