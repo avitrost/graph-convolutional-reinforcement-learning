@@ -184,7 +184,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         if episode % 20 == 0:
             print(score / 2000)
             score = 0
-        if episode < 100:
+        if episode < 2:
             continue
 
         for e in range(n_epoch):
