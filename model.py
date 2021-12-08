@@ -25,8 +25,8 @@ class AttModel(keras.Model):
     def call(self, x, mask):
         v = self.fcv(x)
         q = self.fcq(x)
-        k = tf.transpose(self.fck(x), perm=(0,2,1))
-        att = tf.nn.softmax(tf.matmul(tf.matmul(q, k), mask) - np.inf * (1 - mask), axis=2)
+        k = self.fck(x)
+        att = tf.nn.softmax(tf.math.multiply(tf.matmul(q, k, transpose_b=True), mask) - np.inf * (1 - mask), axis=2)
         
         out = tf.matmul(att, v) / np.sqrt(self.hidden_dim) # Might not be needed
 		# out = torch.add(out,v)
