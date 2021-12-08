@@ -125,9 +125,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         for step in range(MAX_STEPS):
             print('step:', step)
             print('{} agents', len(env.agents))
-            sys.stdout.flush()
-            print(list(set(prev_agents) - set(env.agents)))
-            sys.stdout.flush()
             prev_agents = env.agents
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
@@ -168,50 +165,23 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
             next_observations, rewards, dones, infos = env.step(actions)
 
-            print('a')
             positions = get_agent_positions(env)
-            sys.stdout.flush()
-            print('b')
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
-            sys.stdout.flush()
-            print('c')
             next_adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
-            print('d')
             
             next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
-            sys.stdout.flush()
-            print('e')
             reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
-            sys.stdout.flush()
-            print('f')
 
             replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, infos)
-            sys.stdout.flush()
-            print('g')
             replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, infos)
-            sys.stdout.flush()
-            print('h')
 
             input_matrix_1 = next_input_matrix_1
-            sys.stdout.flush()
-            print('i')
             input_matrix_2 = next_input_matrix_2
-            sys.stdout.flush()
-            print('j')
             adj_matrix_1 = next_adj_matrix_1
-            sys.stdout.flush()
-            print('k')
             adj_matrix_2 = next_adj_matrix_2
-            sys.stdout.flush()
-            print('l')
             observations = next_observations
-            sys.stdout.flush()
-            print('m')
-            sys.stdout.flush()
 
             score += np.sum(list(rewards.values())) # total score across both teams, should update later
-            print('n')
-            sys.stdout.flush()
         
         if episode % 20 == 0:
             print(score / 2000)
