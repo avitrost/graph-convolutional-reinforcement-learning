@@ -49,7 +49,8 @@ def get_agents_in_radius(agent, positions):
     for a in positions:
         if not a == agent:
             if distance(positions[agent], positions[a]) <= VIEW_RADIUS:
-                agents.append(a)
+                if (TEAM_COLORS[0] in agent and TEAM_COLORS[0] in a) or (TEAM_COLORS[1] in agent and TEAM_COLORS[1] in a):
+                    agents.append(a)
     return agents
 
 def build_observation_matrices(id_maps, observations, agents, team_size):
@@ -290,13 +291,6 @@ def build_adjacency_matrix(names_to_ids, positions):
         agent_id = names_to_ids[agent]
         neighbors = get_agents_in_radius(agent, positions)
         for neighbor in neighbors:
-            a = matrix[agent_id]
-            try:
-                b = names_to_ids[neighbor]
-            except KeyError:
-                print(names_to_ids)
-                print(neighbor)
-            c = a[b]
             matrix[agent_id][names_to_ids[neighbor]] = 1
     return matrix
 
