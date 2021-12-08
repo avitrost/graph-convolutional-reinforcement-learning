@@ -10,7 +10,7 @@ from model import AgentModel
 
 VIEW_RADIUS = 5
 TEAM_COLORS = ['red', 'blue']
-CLASSES = ['ranged', 'mele']
+CLASSES = ['mele', 'ranged']
 CLASS1_ACTIONS = 9
 CLASS2_ACTIONS = 13
 OBSERVATION_SPACE_SIZE = 1521
