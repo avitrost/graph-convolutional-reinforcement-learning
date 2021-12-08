@@ -89,10 +89,10 @@ def train(env, id_maps, team_size, team1_model, team2_model):
     n_epoch = 5
     batch_size = 128
 
-    O_1 = np.ones((batch_size, team_size, 13, 13, 9))
-    O_2 = np.ones((batch_size, team_size, 13, 13, 9))
-    Next_O_1 = np.ones((batch_size, team_size, 13, 13, 9))
-    Next_O_2 = np.ones((batch_size, team_size, 13, 13, 9))
+    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
     Matrix_1 = np.ones((batch_size, team_size, team_size))
     Matrix_2 = np.ones((batch_size, team_size, team_size))
     Next_Matrix_1 = np.ones((batch_size, team_size, team_size))
