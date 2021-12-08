@@ -57,16 +57,16 @@ def get_agents_in_radius(agent, positions):
     return agents
 
 def build_observation_matrices(id_maps, observations, agents, team_size):
-    input_matrix_1 = np.zeros([team_size, 13, 13, 9])
-    input_matrix_2 = np.zeros([team_size, 13, 13, 9])
+    input_matrix_1 = np.zeros([team_size, OBSERVATION_SPACE_SIZE])
+    input_matrix_2 = np.zeros([team_size, OBSERVATION_SPACE_SIZE])
     #TODO append class of agent to end of observation space
     for agent in agents:
         if TEAM_COLORS[0] in agent:
-            input_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = observations[agent]
+            input_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = np.reshape(observations[agent], [-1])
         elif TEAM_COLORS[1] in agent:
-            input_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = observations[agent]
+            input_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = np.reshape(observations[agent], [-1])
     
-    return (input_matrix_1, input_matrix_2)
+    return input_matrix_1, input_matrix_2
 
 def build_reward_matrices(id_maps, rewards, agents, team_size):
     reward_matrix_1 = np.zeros([team_size])

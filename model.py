@@ -6,12 +6,10 @@ class Encoder(keras.Model):
 
     def __init__(self, hidden_dim=128):
         super(Encoder, self).__init__()
-        self.flatten = keras.layers.Flatten()
         self.fc = keras.layers.Dense(hidden_dim, activation='relu')
     
     def call(self, x):
-        flattened = self.flatten(x)
-        return self.fc(flattened)
+        return self.fc(x)
 
 class AttModel(keras.Model):
     def __init__(self, hidden_dim, output_dim):
