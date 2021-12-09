@@ -215,13 +215,19 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
-                        print(sample_1[6])
-                        print(sample_2[6])
                         current_1 = sample_1[2][i]
-                        discounted_1 = (1-sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]])*GAMMA*target_q_values_1[j][i]
+                        try:
+                            done_1 = 1 if sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]] else 0
+                        except KeyError:
+                            done_1 = 1
+                        discounted_1 = (1-done_1)*GAMMA*target_q_values_1[j][i]
                         expected_q_values_1[j][i][int(sample_1[1][i])] = current_1 + discounted_1
                         current_2 = sample_2[2][i]
-                        discounted_2 = (1-sample_2[6][id_maps[TEAM_COLORS[1]]['ids_to_names'][i]])*GAMMA*target_q_values_2[j][i]
+                        try:
+                            done_2 = 1 if sample_2[6][id_maps[TEAM_COLORS[1]]['ids_to_names'][i]] else 0
+                        except KeyError:
+                            done_2 = 1
+                        discounted_2 = (1-done_2)*GAMMA*target_q_values_2[j][i]
                         expected_q_values_2[j][i][int(sample_2[1][i])] = current_2 + discounted_2
                 
                 loss_1 = tf.reduce_mean(tf.math.square(q_values_1 - expected_q_values_1))
