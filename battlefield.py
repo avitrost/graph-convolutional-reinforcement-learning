@@ -179,6 +179,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             score += np.sum(list(rewards.values())) # total score across both teams, should update later
 
         if episode % 20 == 0:
+            team1_model.save("team1_model_episode_{}_backup", episode)
+            team2_model.save("team2_model_episode_{}_backup", episode)
             print(score / 2000)
             score = 0
         if episode < 1:
