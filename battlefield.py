@@ -182,7 +182,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             team2_model.save("team2_model_episode_{}_backup".format(episode))
             print(score / 2000)
             score = 0
-        if episode < 1:
+        if episode < 5:
             continue
 
         for e in range(n_epoch):
