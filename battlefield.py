@@ -167,9 +167,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
             reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
 
-            if len(dones != 0):
-                replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, dones)
-                replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, dones)
+            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, dones)
+            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, dones)
 
             input_matrix_1 = next_input_matrix_1
             input_matrix_2 = next_input_matrix_2
@@ -214,6 +213,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
+                        print(sample_1[6])
+                        print(sample_2[6])
                         current_1 = sample_1[2][i]
                         discounted_1 = (1-sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]])*GAMMA*target_q_values_1[j][i]
                         expected_q_values_1[j][i][int(sample_1[1][i])] = current_1 + discounted_1
