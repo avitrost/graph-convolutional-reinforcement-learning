@@ -116,6 +116,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             if RENDER:
                 env.render()
 
+            if len(env.agents) == 0:
+                break
             print('episode/step:', episode, step)
             print('{} agents', len(env.agents))
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
@@ -156,9 +158,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             
 
             next_observations, rewards, dones, infos = env.step(actions)
-
-            if len(env.agents) == 0:
-                break
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
@@ -203,7 +202,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                 Next_Matrix_1[j] = sample_1[5]
                 Next_Matrix_2[j] = sample_2[5]
 
-            with tf.GradientTape() as tape:
+            with tf.GradientTape(persistent=True) as tape:
                 q_values_1 = team1_model.model(O_1, Matrix_1)
                 q_values_2 = team2_model.model(O_2, Matrix_2)
                 expected_q_values_1 = tf.identity(q_values_1).numpy()
@@ -237,6 +236,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             gradients_2 = tape.gradient(loss_2, team2_model.model.trainable_variables)
             team1_model.model.optimizer.apply_gradients(zip(gradients_1, team1_model.model.trainable_variables))
             team2_model.model.optimizer.apply_gradients(zip(gradients_2, team2_model.model.trainable_variables))
+            del tape
 
         if episode % 5 == 0:
             team1_model.update_target_model()
