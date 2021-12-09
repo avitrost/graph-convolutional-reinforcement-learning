@@ -124,6 +124,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         for step in range(MAX_STEPS):
             print('episode/step:', episode, step)
             print('{} agents', len(env.agents))
+            if len(env.agents) == 0:
+                break
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
 
@@ -162,6 +164,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
 
             next_observations, rewards, dones, infos = env.step(actions)
+
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
