@@ -55,7 +55,7 @@ class DGN(keras.Model):
         h1 = self.encoder(x)
         h2 = self.att_1(h1, mask)
         h3 = self.att_2(h2, mask)
-        q = self.q_net(tf.concat([h1, h2, h3], axis=0))
+        q = self.q_net(tf.concat([h1, h2, h3], axis=1))
         return q
         
 class AgentModel:
