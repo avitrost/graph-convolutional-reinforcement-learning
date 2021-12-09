@@ -162,8 +162,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
 
             next_observations, rewards, dones, infos = env.step(actions)
-            print(dones)
-            print(infos)
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
@@ -218,8 +216,12 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
-                        expected_q_values_1[j][i][sample_1[1][i]] = sample_1[2][i] + (1-sample_1[6])*GAMMA*target_q_values_1[j][i]
-                        expected_q_values_2[j][i][sample_2[1][i]] = sample_2[2][i] + (1-sample_2[6])*GAMMA*target_q_values_2[j][i]
+                        current_1 = sample_1[2][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]]
+                        discounted_1 = (1-sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]])*GAMMA*target_q_values_1[j][i]
+                        expected_q_values_1[j][i][sample_1[1][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]]] = current_1 + discounted_1
+                        current_2 = sample_1[2][id_maps[TEAM_COLORS[1]]['ids_to_names'][i]]
+                        discounted_2 = (1-sample_1[6][id_maps[TEAM_COLORS[1]]['ids_to_names'][i]])*GAMMA*target_q_values_2[j][i]
+                        expected_q_values_2[j][i][sample_2[1][id_maps[TEAM_COLORS[1]]['ids_to_names'][i]]] = current_2 + discounted_2
                 
                 loss_1 = tf.reduce_mean(tf.math.square(q_values_1 - expected_q_values_1))
                 loss_2 = tf.reduce_mean(tf.math.square(q_values_2 - expected_q_values_2))
