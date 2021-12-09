@@ -162,7 +162,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
 
             next_observations, rewards, dones, infos = env.step(actions)
-            print(dones)
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
@@ -219,6 +218,9 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     for i in range(team_size):
                         print(sample_1[6])
                         current_1 = sample_1[2][i]
+                        sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]]
+                        target_q_values_1[j][i]
+                        expected_q_values_1[j][i][sample_1[1][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]]]
                         discounted_1 = (1-sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]])*GAMMA*target_q_values_1[j][i]
                         expected_q_values_1[j][i][sample_1[1][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]]] = current_1 + discounted_1
                         current_2 = sample_2[2][i]
