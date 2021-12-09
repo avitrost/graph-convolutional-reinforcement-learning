@@ -209,9 +209,10 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                 q_values_2 = team2_model.model(O_2, Matrix_2)
                 expected_q_values_1 = tf.identity(q_values_1)
                 expected_q_values_2 = tf.identity(q_values_2)
+                print(Next_O_1.shape)
                 print(team1_model.target_model(Next_O_1, Next_Matrix_1).shape)
-                target_q_values_1 = tf.reduce_max(team1_model.target_model(Next_O_1, Next_Matrix_1), axis=None)
-                target_q_values_2 = tf.reduce_max(team2_model.target_model(Next_O_2, Next_Matrix_2), axis=None)
+                target_q_values_1 = tf.reduce_max(team1_model.target_model(Next_O_1, Next_Matrix_1), axis=2)
+                target_q_values_2 = tf.reduce_max(team2_model.target_model(Next_O_2, Next_Matrix_2), axis=2)
                 
                 for j in range(batch_size):
                     sample_1 = batch_1[j]
