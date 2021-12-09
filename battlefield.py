@@ -162,6 +162,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
 
             next_observations, rewards, dones, infos = env.step(actions)
+            print(dones)
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
