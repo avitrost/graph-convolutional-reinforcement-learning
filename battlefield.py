@@ -213,8 +213,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
-                        print(sample_1[6])
-                        print(sample_2[6])
                         current_1 = sample_1[2][i]
                         try:
                             done_1 = 1 if sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]] else 0
