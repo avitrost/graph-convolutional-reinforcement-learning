@@ -46,7 +46,6 @@ def get_agents_in_radius(agent, positions):
 def build_observation_matrices(id_maps, observations, agents, team_size):
     input_matrix_1 = np.zeros([team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS])
     input_matrix_2 = np.zeros([team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS])
-    #TODO append class of agent to end of observation space
     for agent in agents:
         if TEAM_COLORS[0] in agent:
             input_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent], :OBSERVATION_SPACE_SIZE] = np.reshape(observations[agent], [-1])
@@ -101,8 +100,6 @@ def train(env, id_maps, team_size, team1_model, team2_model, render_enabled):
             if epsilon < 0.1:
                 epsilon = 0.1
 
-        #TODO size of replay buffer
-        #TODO different replay buffers for each team
         replay_buffer_1 = ReplayBuffer(CAPACITY) 
         replay_buffer_2 = ReplayBuffer(CAPACITY) 
         observations = env.reset()
@@ -269,8 +266,6 @@ def test(env, id_maps, team_size, team1_model, team2_model, render_enabled):
         #     if epsilon < 0.1:
         #         epsilon = 0.1
 
-        #TODO size of replay buffer
-        #TODO different replay buffers for each team
         replay_buffer_1 = ReplayBuffer(CAPACITY) 
         replay_buffer_2 = ReplayBuffer(CAPACITY) 
         observations = env.reset()
@@ -375,8 +370,6 @@ def train_dqn(env, id_maps, team_size, team1_model, team2_model, render_enabled)
             if epsilon < 0.1:
                 epsilon = 0.1
 
-        #TODO size of replay buffer
-        #TODO different replay buffers for each team
         replay_buffer_1 = ReplayBuffer(CAPACITY) 
         replay_buffer_2 = ReplayBuffer(CAPACITY) 
         observations = env.reset()
