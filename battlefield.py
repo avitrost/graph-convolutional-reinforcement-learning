@@ -137,25 +137,25 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS1_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]][:CLASS1_ACTIONS])
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]][:CLASS1_ACTIONS]).numpy()
                     action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
                 elif CLASSES[0] in agent and TEAM_COLORS[1] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS1_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]][:CLASS1_ACTIONS])
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]][:CLASS1_ACTIONS]).numpy()
                     action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
                 elif CLASSES[1] in agent and TEAM_COLORS[0] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS2_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]]).numpy()
                     action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
                 elif CLASSES[1] in agent and TEAM_COLORS[1] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS2_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]]).numpy()
                     action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
 
                 actions[agent] = action
