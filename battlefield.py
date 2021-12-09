@@ -207,8 +207,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             with tf.GradientTape() as tape:
                 q_values_1 = team1_model.model(O_1, Matrix_1)
                 q_values_2 = team2_model.model(O_2, Matrix_2)
-                expected_q_values_1 = tf.identity(q_values_1)
-                expected_q_values_2 = tf.identity(q_values_2)
+                expected_q_values_1 = tf.identity(q_values_1).numpy()
+                expected_q_values_2 = tf.identity(q_values_2).numpy()
                 target_q_values_1 = tf.reduce_max(team1_model.target_model(Next_O_1, Next_Matrix_1), axis=2)
                 target_q_values_2 = tf.reduce_max(team2_model.target_model(Next_O_2, Next_Matrix_2), axis=2)
                 
