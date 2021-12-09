@@ -209,8 +209,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                 q_values_2 = team2_model.model(O_2, Matrix_2)
                 expected_q_values_1 = tf.identity(q_values_1)
                 expected_q_values_2 = tf.identity(q_values_2)
-                print(Next_O_1.shape)
-                print(team1_model.target_model(Next_O_1, Next_Matrix_1).shape)
                 target_q_values_1 = tf.reduce_max(team1_model.target_model(Next_O_1, Next_Matrix_1), axis=2)
                 target_q_values_2 = tf.reduce_max(team2_model.target_model(Next_O_2, Next_Matrix_2), axis=2)
                 
@@ -218,7 +216,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
-                        print(target_q_values_1)
+                        print(sample_1[1])
                         current_1 = sample_1[2][i]
                         sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]]
                         target_q_values_1[j][i]
