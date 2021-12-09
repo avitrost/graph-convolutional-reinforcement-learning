@@ -81,10 +81,10 @@ def train(env, id_maps, team_size, team1_model, team2_model):
     n_epoch = 5
     batch_size = 128
 
-    O_1 = np.ones((batch_size, team_size, 13, 13, 9))
-    O_2 = np.ones((batch_size, team_size, 13, 13, 9))
-    Next_O_1 = np.ones((batch_size, team_size, 13, 13, 9))
-    Next_O_2 = np.ones((batch_size, team_size, 13, 13, 9))
+    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
     Matrix_1 = np.ones((batch_size, team_size, team_size))
     Matrix_2 = np.ones((batch_size, team_size, team_size))
     Next_Matrix_1 = np.ones((batch_size, team_size, team_size))
@@ -118,6 +118,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
             print('episode/step:', episode, step)
             print('{} agents', len(env.agents))
+            if len(env.agents) == 0:
+                break
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
 
@@ -131,31 +133,32 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS1_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]][:CLASS1_ACTIONS])
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]][:CLASS1_ACTIONS]).numpy()
                     action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
                 elif CLASSES[0] in agent and TEAM_COLORS[1] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS1_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]][:CLASS1_ACTIONS])
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]][:CLASS1_ACTIONS]).numpy()
                     action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
                 elif CLASSES[1] in agent and TEAM_COLORS[0] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS2_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]]).numpy()
                     action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
                 elif CLASSES[1] in agent and TEAM_COLORS[1] in agent:
                     if np.random.rand() < epsilon:
                         action = np.random.randint(CLASS2_ACTIONS)
                     else:
-                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]])
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]]).numpy()
                     action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
 
                 actions[agent] = action
             
 
             next_observations, rewards, dones, infos = env.step(actions)
+
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
@@ -164,8 +167,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
             reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
 
-            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, infos)
-            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, infos)
+            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, dones)
+            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, dones)
 
             input_matrix_1 = next_input_matrix_1
             input_matrix_2 = next_input_matrix_2
@@ -178,7 +181,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         if episode % 20 == 0:
             print(score / 2000)
             score = 0
-        if episode < 2:
+        if episode < 1:
             continue
 
         for e in range(n_epoch):
@@ -201,17 +204,21 @@ def train(env, id_maps, team_size, team1_model, team2_model):
             with tf.GradientTape() as tape:
                 q_values_1 = team1_model.model(O_1, Matrix_1)
                 q_values_2 = team2_model.model(O_2, Matrix_2)
-                expected_q_values_1 = tf.identity(q_values_1)
-                expected_q_values_2 = tf.identity(q_values_2)
-                target_q_values_1 = team1_model.target_model(Next_O_1, Next_Matrix_1).max(dim = 2)[0]
-                target_q_values_2 = team2_model.target_model(Next_O_2, Next_Matrix_2).max(dim = 2)[0]
+                expected_q_values_1 = tf.identity(q_values_1).numpy()
+                expected_q_values_2 = tf.identity(q_values_2).numpy()
+                target_q_values_1 = tf.reduce_max(team1_model.target_model(Next_O_1, Next_Matrix_1), axis=2)
+                target_q_values_2 = tf.reduce_max(team2_model.target_model(Next_O_2, Next_Matrix_2), axis=2)
                 
                 for j in range(batch_size):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
-                        expected_q_values_1[j][i][sample_1[1][i]] = sample_1[2][i] + (1-sample_1[6])*GAMMA*target_q_values_1[j][i]
-                        expected_q_values_2[j][i][sample_2[1][i]] = sample_2[2][i] + (1-sample_2[6])*GAMMA*target_q_values_2[j][i]
+                        current_1 = sample_1[2][i]
+                        discounted_1 = (1-sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]])*GAMMA*target_q_values_1[j][i]
+                        expected_q_values_1[j][i][int(sample_1[1][i])] = current_1 + discounted_1
+                        current_2 = sample_2[2][i]
+                        discounted_2 = (1-sample_2[6][id_maps[TEAM_COLORS[1]]['ids_to_names'][i]])*GAMMA*target_q_values_2[j][i]
+                        expected_q_values_2[j][i][int(sample_2[1][i])] = current_2 + discounted_2
                 
                 loss_1 = tf.reduce_mean(tf.math.square(q_values_1 - expected_q_values_1))
                 loss_2 = tf.reduce_mean(tf.math.square(q_values_2 - expected_q_values_2))

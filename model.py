@@ -6,12 +6,10 @@ class Encoder(keras.Model):
 
     def __init__(self, hidden_dim=128):
         super(Encoder, self).__init__()
-        self.flatten = keras.layers.Flatten()
         self.fc = keras.layers.Dense(hidden_dim, activation='relu')
     
     def call(self, x):
-        flattened = self.flatten(x)
-        return self.fc(flattened)
+        return self.fc(x)
 
 class AttModel(keras.Model):
     def __init__(self, hidden_dim, output_dim):
@@ -71,7 +69,7 @@ class DGN(keras.Model):
         h1 = self.encoder(x)
         h2 = self.att_1(h1, mask)
         h3 = self.att_2(h2, mask)
-        q = self.q_net(tf.concat([h1, h2, h3], axis=0))
+        q = self.q_net(tf.concat([h1, h2, h3], axis=-1))
         return q
     
 class DumbModel:
