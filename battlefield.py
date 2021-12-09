@@ -17,7 +17,7 @@ ADDITIONAL_OBSERVATIONS = 1
 MAX_EPISODES = 1000
 CAPACITY = 1000
 MAX_STEPS = 500
-RENDER = True
+RENDER = False
 
 HIDDEN_DIM = 128
 
@@ -81,10 +81,10 @@ def train(env, id_maps, team_size, team1_model, team2_model):
     n_epoch = 5
     batch_size = 128
 
-    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
-    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
-    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
-    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
     Matrix_1 = np.ones((batch_size, team_size, team_size))
     Matrix_2 = np.ones((batch_size, team_size, team_size))
     Next_Matrix_1 = np.ones((batch_size, team_size, team_size))
@@ -118,8 +118,6 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
             print('episode/step:', episode, step)
             print('{} agents', len(env.agents))
-            if len(env.agents) == 0:
-                break
             q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
             q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
 
@@ -159,6 +157,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
 
             next_observations, rewards, dones, infos = env.step(actions)
 
+            if len(env.agents) == 0:
+                break
 
             positions = get_agent_positions(env)
             next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
@@ -215,6 +215,8 @@ def train(env, id_maps, team_size, team1_model, team2_model):
                     sample_1 = batch_1[j]
                     sample_2 = batch_2[j]
                     for i in range(team_size):
+                        print(sample_1[6])
+                        print(sample_2[6])
                         current_1 = sample_1[2][i]
                         discounted_1 = (1-sample_1[6][id_maps[TEAM_COLORS[0]]['ids_to_names'][i]])*GAMMA*target_q_values_1[j][i]
                         expected_q_values_1[j][i][int(sample_1[1][i])] = current_1 + discounted_1
