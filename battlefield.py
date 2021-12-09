@@ -12,7 +12,7 @@ TEAM_COLORS = ['red', 'blue']
 CLASSES = ['mele', 'ranged']
 CLASS1_ACTIONS = 9
 CLASS2_ACTIONS = 25
-OBSERVATION_SPACE_SIZE = 1522
+OBSERVATION_SPACE_SIZE = 1521
 ADDITIONAL_OBSERVATIONS = 1
 MAX_EPISODES = 1000
 CAPACITY = 1000
@@ -81,10 +81,10 @@ def train(env, id_maps, team_size, team1_model, team2_model):
     n_epoch = 5
     batch_size = 128
 
-    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
-    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
-    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
-    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE))
+    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
     Matrix_1 = np.ones((batch_size, team_size, team_size))
     Matrix_2 = np.ones((batch_size, team_size, team_size))
     Next_Matrix_1 = np.ones((batch_size, team_size, team_size))
