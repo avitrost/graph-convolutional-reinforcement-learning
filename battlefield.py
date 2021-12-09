@@ -1,3 +1,4 @@
+import sys
 from pettingzoo.magent import combined_arms_v5
 from numpy import sqrt, square
 import numpy as np
@@ -17,7 +18,6 @@ ADDITIONAL_OBSERVATIONS = 1
 MAX_EPISODES = 1000
 CAPACITY = 1000
 MAX_STEPS = 500
-RENDER = False
 
 HIDDEN_DIM = 128
 
@@ -74,7 +74,7 @@ def build_reward_matrices(id_maps, rewards, agents, team_size):
     
     return (reward_matrix_1, reward_matrix_2)
 
-def train(env, id_maps, team_size, team1_model, team2_model):
+def train(env, id_maps, team_size, team1_model, team2_model, render_enabled):
     
     epsilon = 0.9
     GAMMA = 0.99
@@ -113,7 +113,7 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
         
         for step in range(MAX_STEPS):
-            if RENDER:
+            if render_enabled:
                 env.render()
 
             if len(env.agents) == 0:
@@ -241,9 +241,118 @@ def train(env, id_maps, team_size, team1_model, team2_model):
         if episode % 5 == 0:
             team1_model.update_target_model()
             team2_model.update_target_model()
+
+def test(env, id_maps, team_size, team1_model, team2_model, render_enabled):
+    
+    epsilon = 0
+    GAMMA = 0.99
+    n_epoch = 5
+    batch_size = 128
+
+    O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Next_O_1 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Next_O_2 = np.ones((batch_size, team_size, OBSERVATION_SPACE_SIZE + ADDITIONAL_OBSERVATIONS))
+    Matrix_1 = np.ones((batch_size, team_size, team_size))
+    Matrix_2 = np.ones((batch_size, team_size, team_size))
+    Next_Matrix_1 = np.ones((batch_size, team_size, team_size))
+    Next_Matrix_2 = np.ones((batch_size, team_size, team_size))
+
+    score = 0
+    
+    for episode in range(MAX_EPISODES):
+        print('episode:', episode)
+        
+        
+        # if episode > 100:
+        #     epsilon -= 0.0004
+        #     if epsilon < 0.1:
+        #         epsilon = 0.1
+
+        #TODO size of replay buffer
+        #TODO different replay buffers for each team
+        replay_buffer_1 = ReplayBuffer(CAPACITY) 
+        replay_buffer_2 = ReplayBuffer(CAPACITY) 
+        observations = env.reset()
+        input_matrix_1, input_matrix_2 = build_observation_matrices(id_maps, observations, env.agents, team_size)
+        
+        positions = get_agent_positions(env)
+        adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
+        adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
+        
+        for step in range(MAX_STEPS):
+            if render_enabled:
+                env.render()
+            
+            if len(env.agents) == 0:
+                break
+            print('episode/step:', episode, step)
+            print('{} agents', len(env.agents))
+            q_1 = team1_model.model(input_matrix_1, adj_matrix_1)
+            q_2 = team2_model.model(input_matrix_2, adj_matrix_2)
+
+            actions = {}
+
+            action_matrix_1 = np.zeros([team_size])
+            action_matrix_2 = np.zeros([team_size])
+
+            for agent in env.agents:
+                if CLASSES[0] in agent and TEAM_COLORS[0] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS1_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]][:CLASS1_ACTIONS]).numpy()
+                    action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
+                elif CLASSES[0] in agent and TEAM_COLORS[1] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS1_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]][:CLASS1_ACTIONS]).numpy()
+                    action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
+                elif CLASSES[1] in agent and TEAM_COLORS[0] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS2_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]]).numpy()
+                    action_matrix_1[id_maps[TEAM_COLORS[0]]['names_to_ids'][agent]] = action
+                elif CLASSES[1] in agent and TEAM_COLORS[1] in agent:
+                    if np.random.rand() < epsilon:
+                        action = np.random.randint(CLASS2_ACTIONS)
+                    else:
+                        action = tf.math.argmax(q_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]]).numpy()
+                    action_matrix_2[id_maps[TEAM_COLORS[1]]['names_to_ids'][agent]] = action
+
+                actions[agent] = action
             
 
-def train_dqn(env, id_maps, team_size, team1_model, team2_model):
+            next_observations, rewards, dones, infos = env.step(actions)
+
+            positions = get_agent_positions(env)
+            next_adj_matrix_1 = build_adjacency_matrix(id_maps[TEAM_COLORS[0]]['names_to_ids'], positions)
+            next_adj_matrix_2 = build_adjacency_matrix(id_maps[TEAM_COLORS[1]]['names_to_ids'], positions)
+            
+            next_input_matrix_1, next_input_matrix_2 = build_observation_matrices(id_maps, next_observations, env.agents, team_size)
+            reward_matrix_1, reward_matrix_2 = build_reward_matrices(id_maps, rewards, env.agents, team_size)
+
+            replay_buffer_1.add(input_matrix_1, action_matrix_1, reward_matrix_1, next_input_matrix_1, adj_matrix_1, next_adj_matrix_1, dones)
+            replay_buffer_2.add(input_matrix_2, action_matrix_2, reward_matrix_2, next_input_matrix_2, adj_matrix_2, next_adj_matrix_2, dones)
+
+            input_matrix_1 = next_input_matrix_1
+            input_matrix_2 = next_input_matrix_2
+            adj_matrix_1 = next_adj_matrix_1
+            adj_matrix_2 = next_adj_matrix_2
+            observations = next_observations
+
+            score += np.sum(list(rewards.values())) # total score across both teams, should update later
+
+        if episode % 20 == 0:
+            print(score / 2000)
+            score = 0
+        if episode < 5:
+            continue
+
+
+def train_dqn(env, id_maps, team_size, team1_model, team2_model, render_enabled):
     epsilon = 0.9
     GAMMA = 0.99
     n_epoch = 5
@@ -258,7 +367,7 @@ def train_dqn(env, id_maps, team_size, team1_model, team2_model):
     
     for episode in range(MAX_EPISODES):
         print('episode:', episode)
-        if RENDER:
+        if render_enabled:
             env.render()
         
         if episode > 100:
@@ -274,7 +383,6 @@ def train_dqn(env, id_maps, team_size, team1_model, team2_model):
         input_matrix_1, input_matrix_2 = build_observation_matrices(id_maps, observations, env.agents, team_size)
         
         for step in range(MAX_STEPS):
-            s = time.time()
             print('episode/step:', episode, step)
             print('{} agents', len(env.agents))
             q_1 = team1_model.model(input_matrix_1)
@@ -328,7 +436,6 @@ def train_dqn(env, id_maps, team_size, team1_model, team2_model):
 
             score += np.sum(list(rewards.values())) # total score across both teams, should update later
 
-            print(time.time() - s)
         if episode % 20 == 0:
             print(score / 2000)
             score = 0
@@ -459,10 +566,31 @@ def main():
     team1_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
     team2_model = AgentModel(HIDDEN_DIM, CLASS2_ACTIONS)
 
-    train(env, id_maps, team_size, team1_model, team2_model)
+    if len(sys.argv) != 3:
+        print('Requires arguments: TRAIN|TEST RENDER|HIDE')
+        return
+    args = sys.argv[1:]
 
-    team1_model.save('team1_model')
-    team2_model.save('team2_model')
+    if args[1] == 'RENDER':
+        render_enabled = True
+    elif args[1] == 'HIDE':
+        render_enabled = False
+    else:
+        raise Exception('Unknown argument {}. Must be RENDER or HIDE'.format(args[1]))
+
+    if args[0] == 'TRAIN':
+        train(env, id_maps, team_size, team1_model, team2_model, render_enabled)
+
+        team1_model.save('team1_model')
+        team2_model.save('team2_model')
+    elif args[0] == 'TEST':
+        team1_model.load('team1_model')
+        team2_model.load('team2_model')
+
+        test(env, id_maps, team_size, team1_model, team2_model, render_enabled)
+    else:
+        raise Exception('Unknown argument {}. Must be TRAIN or TEST'.format(args[0]))
+    
 
 
 if __name__ == '__main__':
